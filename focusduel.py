@@ -47,7 +47,7 @@ STATE_PATH = os.path.join(APP_DIR, "state.json")
 HISTORY_PATH = os.path.join(APP_DIR, "history.json")  # дни до ActivityWatch (например, из Rize): дата → часы работы
 PLIST_PATH = os.path.expanduser("~/Library/LaunchAgents/com.focusduel.plist")
 LABEL = "com.focusduel"
-VERSION = "2026.10.17"  # меняется с каждым выпуском на GitHub
+VERSION = "2026.10.17.2"  # меняется с каждым выпуском на GitHub
 APPS_DIR = "/Applications"
 AW_DOWNLOAD_URL = "https://activitywatch.net/downloads/"
 AW_RELEASES_API = "https://api.github.com/repos/ActivityWatch/activitywatch/releases/latest"
@@ -655,7 +655,7 @@ def get_data():
 
 def dashboard_page(cfg):
     d = cfg["duel"]
-    duel = ("%s#g=%s&me=%s" % (d["page_url"], d["invite_code"], d["member_id"])
+    duel = ("%s#g=%s&me=%s&from=mac" % (d["page_url"], d["invite_code"], d["member_id"])
             if d["page_url"] and d["invite_code"] else "/duel")
     return PAGE.replace('/*LANG*/"ru"', json.dumps(cfg["lang"])).replace('/*DUEL*/"/duel"', json.dumps(duel))
 
@@ -664,7 +664,7 @@ def duel_page(cfg):
     """Страница дуэли с настройками Supabase этого Mac. Без них — демо."""
     d = cfg.get("duel") or {}
     boot = {"url": d.get("supabase_url"), "key": d.get("supabase_key"), "code": d.get("invite_code"),
-            "me": d.get("member_id"), "lang": cfg["lang"]} if d.get("invite_code") else None
+            "me": d.get("member_id"), "lang": cfg["lang"], "local": True, "page": d.get("page_url")} if d.get("invite_code") else None
     return DUEL_PAGE.replace("/*BOOT*/null", json.dumps(boot, ensure_ascii=False).replace("</", "<\\/"))
 
 
@@ -1755,6 +1755,13 @@ body{margin:0;background:var(--bg);color:var(--fg);font-family:Manrope,system-ui
 .heat{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px}
 .heat div{aspect-ratio:1;border-radius:4px;background:var(--line);font-size:9px;color:var(--mute);display:flex;align-items:flex-end;justify-content:flex-end;padding:2px}
 .months{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.duo.solo{grid-template-columns:1fr}
+a.logo{color:var(--fg);text-decoration:none;cursor:pointer}
+.home{color:var(--fg);background:var(--card);border-radius:9px;padding:7px 11px;font-weight:600;font-size:13px;text-decoration:none;white-space:nowrap}
+.btns{display:flex;gap:8px;flex-wrap:wrap}
+.btn{height:42px;padding:0 16px;border:0;border-radius:10px;background:var(--sel);color:var(--fg);font:600 14px Manrope,sans-serif;cursor:pointer}
+.btn.primary{background:var(--p1);color:#0F1115}
+.code{font-family:Unbounded,sans-serif;letter-spacing:.04em}
 .err{background:#3a1f1f;color:#ffd7cf;border-radius:12px;padding:14px}
 .lang{display:flex;gap:2px;background:var(--card);border-radius:9px;padding:3px}
 .lang button{border:0;background:transparent;color:var(--mute);font:700 12px Manrope,sans-serif;padding:6px 9px;border-radius:7px;cursor:pointer}
@@ -1767,8 +1774,8 @@ body{margin:0;background:var(--bg);color:var(--fg);font-family:Manrope,system-ui
 </head>
 <body>
 <div class="wrap">
-  <div class="top"><div class="logo">Focus Duel</div>
-    <div class="right"><div class="mute small" id="when"></div><div class="lang" role="group" aria-label="Язык / Тіл"><button data-l="ru">RU</button><button data-l="kk">KZ</button></div></div></div>
+  <div class="top"><a class="logo" id="logo" href="#">Focus Duel</a>
+    <div class="right"><a class="home" id="home" hidden></a><div class="mute small" id="when"></div><div class="lang" role="group" aria-label="Язык / Тіл"><button data-l="ru">RU</button><button data-l="kk">KZ</button></div></div></div>
   <div id="demo"></div>
   <div class="tabs" role="tablist">
     <button role="tab" data-t="today" aria-selected="true"></button>
@@ -1782,6 +1789,8 @@ const BOOT=/*BOOT*/null;
 const hash=new URLSearchParams(location.hash.slice(1));
 const CODE=(BOOT&&BOOT.code)||hash.get('g'), ME=(BOOT&&BOOT.me)||hash.get('me');
 const DEMO=!(BOOT&&BOOT.url&&BOOT.key&&CODE);
+const HOME=BOOT&&BOOT.local?'/':(hash.get('from')==='mac'?'http://localhost:5700/':'');
+const PAGE_URL=(BOOT&&BOOT.page)||(location.origin+location.pathname), REPO='https://github.com/daniyalkay/focusduel';
 const LANG0=(BOOT&&BOOT.lang)||((navigator.language||'').startsWith('kk')?'kk':'ru');
 let LANG=(()=>{try{return localStorage.getItem('fd_lang')||LANG0}catch(e){return LANG0}})();
 const T={
@@ -1789,7 +1798,7 @@ const T={
   lead:'Лидер',goal:(g,p)=>`цель ${g} ч · ${p}%`,focus:'Фокус',dist:'Отвлечения',sw:'Переключения',
   notYet:'сегодня ещё не работал',offline:h=>`не на связи ${h} ч`,never:'ещё не присылал данные',atPc:'за компьютером',lastAt:x=>`последняя активность в ${x}`,
   even:'Пока ровно',ahead:(n,d)=>`${n} впереди на ${d}`,weekSfx:' по часам за неделю',byHour:'По часам',week:'Неделя',won:'выигранные дни',
-  waitT:'Ждём второго участника',waitD:'Как только друг установит Focus Duel и введёт код группы, здесь появится дуэль.',code:'Код группы:',
+  waitT:'Ждём второго участника',waitD:'Как только друг установит Focus Duel и введёт код группы, здесь появится дуэль.',code:'Код группы:',home:'← Мой дашборд',invT:'Позови друга',invD:'Отправь ему приглашение: как только он установит Focus Duel и введёт код, здесь начнётся дуэль.',copy:'Скопировать приглашение',copied:'Скопировано ✓',share:'Поделиться',thisWeek:'Эта неделя',invMsg:(r,c,u)=>`Давай соревноваться в Focus Duel — кто больше работает за компьютером.\nПрограмма: ${r}\nКод нашей группы: ${c}\nСтраница дуэли: ${u}`,
   score:'Счёт недели',scoreSub:'дни, кто больше работал',byDay:'По дням',compare:'Сравнение',total:'Всего за неделю',
   perDay:'В среднем в день',avgFocus:'Средний фокус-блок',best:'Лучший день',monthFor:m=>`за ${m}`,streak:'дней подряд с целью',
   hit:(a,b)=>`Цель выполнена ${a} раз из ${b}`,wd:['Пн','Вт','Ср','Чт','Пт','Сб','Вс'],err:'Не получилось загрузить дуэль: '},
@@ -1797,7 +1806,7 @@ const T={
   lead:'Көшбасшы',goal:(g,p)=>`мақсат ${g} сағ · ${p}%`,focus:'Фокус',dist:'Алаңдау',sw:'Ауысулар',
   notYet:'бүгін әлі жұмыс істемеді',offline:h=>`${h} сағаттан бері байланыста емес`,never:'әлі дерек жібермеді',atPc:'компьютер басында',lastAt:x=>`соңғы белсенділік ${x}`,
   even:'Әзірге тең',ahead:(n,d)=>`${n} ${d} алда`,weekSfx:' (апта бойынша)',byHour:'Сағат бойынша',week:'Апта',won:'жеңген күндер',
-  waitT:'Екінші қатысушыны күтеміз',waitD:'Досың Focus Duel-ді орнатып, топ кодын енгізген соң мұнда дуэль пайда болады.',code:'Топ коды:',
+  waitT:'Екінші қатысушыны күтеміз',waitD:'Досың Focus Duel-ді орнатып, топ кодын енгізген соң мұнда дуэль пайда болады.',code:'Топ коды:',home:'← Менің дашбордым',invT:'Досыңды шақыр',invD:'Оған шақыру жібер: ол Focus Duel-ді орнатып, кодты енгізген соң мұнда дуэль басталады.',copy:'Шақыруды көшіру',copied:'Көшірілді ✓',share:'Бөлісу',thisWeek:'Осы апта',invMsg:(r,c,u)=>`Focus Duel-де жарысайық — компьютерде кім көбірек жұмыс істейді.\nБағдарлама: ${r}\nТобымыздың коды: ${c}\nДуэль беті: ${u}`,
   score:'Апта есебі',scoreSub:'кім көбірек жұмыс істеген күндер',byDay:'Күндер бойынша',compare:'Салыстыру',total:'Аптада барлығы',
   perDay:'Күніне орта есеппен',avgFocus:'Орташа фокус-блок',best:'Ең үздік күн',monthFor:m=>`${m} айында`,streak:'күн қатарынан мақсат орындалды',
   hit:(a,b)=>`Мақсат орындалды: ${a} / ${b} күн`,wd:['Дс','Сс','Ср','Бс','Жм','Сб','Жс'],err:'Дуэльді жүктеу мүмкін болмады: '}};
@@ -1884,10 +1893,32 @@ function pairChart(labels,va,vb,max,sub){
 function legend(){const [a,b]=DATA.members;return `<div class="legend"><span><i style="background:var(--p1)"></i>${esc(a.name)}</span>${b?`<span><i style="background:var(--p2)"></i>${esc(b.name)}</span>`:''}</div>`}
 function weekDays(){const td=dt(DATA.today),dow=(td.getDay()+6)%7;return DATA.days.slice(-(dow+1))}
 function wins(days){const [a,b]=DATA.members;let wa=0,wb=0;days.forEach(d=>{const x=DATA.get(a,d).work_sec,y=DATA.get(b,d).work_sec;if(Math.abs(x-y)<60)return;if(x>y)wa++;else wb++});return [wa,wb]}
-function waiting(){return `<div class="card"><div class="h">${t('waitT')}</div><div class="mute" style="font-size:14px">${t('waitD')}</div>${CODE?`<div style="font-size:14px">${t('code')} <b style="font-family:Unbounded,sans-serif;letter-spacing:.04em">${esc(CODE)}</b></div>`:''}</div>`}
+function invite(){
+  if(!CODE)return '';
+  return `<div class="card"><div class="h">${t('invT')}</div><div class="mute" style="font-size:14px">${t('invD')}</div>
+    <div style="font-size:14px">${t('code')} <b class="code">${esc(CODE)}</b></div>
+    <div class="btns"><button class="btn primary" data-act="copy">${t('copy')}</button>${navigator.share?`<button class="btn" data-act="share">${t('share')}</button>`:''}</div></div>`;
+}
+const inviteText=()=>t('invMsg')(REPO,CODE,PAGE_URL+'#g='+CODE);
+function soloToday(a){
+  const s=DATA.get(a,DATA.today);
+  let lo=24,hi=0;s.hourly_work.forEach((v,h)=>{if(v>60){lo=Math.min(lo,h);hi=Math.max(hi,h)}});if(lo>hi){lo=9;hi=19}
+  const hours=[];for(let h=lo;h<=hi;h++)hours.push(h);
+  return `<div class="duo solo">${personCard(a,0,s,false)}</div>
+  <div class="card"><div class="top"><div class="h">${t('byHour')}</div>${legend()}</div>${pairChart(hours,hours.map(h=>s.hourly_work[h]),hours.map(()=>0),3600)}</div>
+  ${invite()}`;
+}
+function soloWeek(a){
+  const cur=weekDays(),names=t('wd'),all=names.map((_,i)=>cur[i]||null);
+  const va=all.map(d=>d?DATA.get(a,d).work_sec:0),total=va.reduce((x,y)=>x+y,0),worked=va.filter(v=>v>0).length;
+  return `<div class="card"><div class="mute small">${t('thisWeek')}</div><div class="big">${HM(total)}</div>
+    <div class="mute small">${t('perDay')}: ${HM(worked?total/worked:0)}</div></div>
+  <div class="card"><div class="top"><div class="h">${t('byDay')}</div>${legend()}</div>${pairChart(names,va,va.map(()=>0),Math.max(3600,...va),va.map((v,i)=>all[i]?HM(v):''))}</div>
+  ${invite()}`;
+}
 
 function today(){
-  const [a,b]=DATA.members;if(!b)return waiting();
+  const [a,b]=DATA.members;if(!b)return soloToday(a);
   const td=DATA.today,sa=DATA.get(a,td),sb=DATA.get(b,td),lead=Math.abs(sa.work_sec-sb.work_sec)>=60?(sa.work_sec>sb.work_sec?0:1):-1;
   let lo=24,hi=0;[sa,sb].forEach(s=>s.hourly_work.forEach((v,h)=>{if(v>60){lo=Math.min(lo,h);hi=Math.max(hi,h)}}));if(lo>hi){lo=9;hi=19}
   const hours=[];for(let h=lo;h<=hi;h++)hours.push(h);
@@ -1899,7 +1930,7 @@ function today(){
     <div class="score"><div class="who" style="color:var(--p1)">${esc(a.name)}</div><div class="big">${wa} : ${wb}</div><div class="who" style="color:var(--p2)">${esc(b.name)}</div></div></div>`;
 }
 function week(){
-  const [a,b]=DATA.members;if(!b)return waiting();
+  const [a,b]=DATA.members;if(!b)return soloWeek(a);
   const cur=weekDays(),names=t('wd'),all=names.map((_,i)=>cur[i]||null);
   const va=all.map(d=>d?DATA.get(a,d).work_sec:0),vb=all.map(d=>d?DATA.get(b,d).work_sec:0);
   const sum=v=>v.reduce((x,y)=>x+y,0),[wa,wb]=wins(cur),max=Math.max(3600,...va,...vb);
@@ -1942,6 +1973,13 @@ function chrome(){
   document.querySelectorAll('.tabs button').forEach((b,i)=>b.textContent=t('tabs')[i]);
   document.querySelectorAll('.lang button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.l===LANG));
   $('#demo').innerHTML=DEMO?`<div class="demo">${t('demo')}</div>`:'';
+  const home=$('#home');if(HOME){home.hidden=false;home.href=HOME;home.textContent=t('home')}
+}
+function goToday(){TAB='today';document.querySelectorAll('.tabs button').forEach(x=>x.setAttribute('aria-selected',x.dataset.t==='today'));render();window.scrollTo({top:0,behavior:'smooth'})}
+async function copyText(text){
+  try{await navigator.clipboard.writeText(text);return true}catch(e){}
+  const ta=document.createElement('textarea');ta.value=text;ta.style.position='absolute';ta.style.left='-9999px';document.body.appendChild(ta);ta.select();
+  let ok=false;try{ok=document.execCommand('copy')}catch(e){}ta.remove();return ok;
 }
 function render(){
   chrome();
@@ -1955,6 +1993,12 @@ async function load(){
 }
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{TAB=b.dataset.t;document.querySelectorAll('.tabs button').forEach(x=>x.setAttribute('aria-selected',x===b));render()});
 document.querySelectorAll('.lang button').forEach(b=>b.onclick=()=>{LANG=b.dataset.l;try{localStorage.setItem('fd_lang',LANG)}catch(e){}render()});
+$('#logo').onclick=e=>{e.preventDefault();if(HOME)location.href=HOME;else goToday()};
+$('#view').addEventListener('click',async e=>{
+  const b=e.target.closest('[data-act]');if(!b)return;
+  if(b.dataset.act==='share'){try{await navigator.share({title:'Focus Duel',text:inviteText()})}catch(err){}return}
+  if(await copyText(inviteText())){const old=b.textContent;b.textContent=t('copied');setTimeout(()=>{b.textContent=old},2000)}
+});
 render();load();setInterval(load,5*60*1000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)load()});
 </script>
