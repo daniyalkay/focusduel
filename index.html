@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0F1115">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Focus Duel">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
+<title>Focus Duel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700&family=Manrope:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0F1115;--card:#181B22;--line:#22262F;--sel:#2A2F3A;--fg:#F2F2F0;--mute:#9AA0AA;--bad:#FF8A65;--good:#5BD69B;--p1:#4C9AFF;--p2:#B794F6}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:Manrope,system-ui,sans-serif;-webkit-text-size-adjust:100%}
+.wrap{max-width:960px;margin:0 auto;padding:max(20px,env(safe-area-inset-top)) 16px 48px;display:flex;flex-direction:column;gap:12px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.logo{font-family:Unbounded,sans-serif;font-weight:700;font-size:20px;letter-spacing:-.02em}
+.mute{color:var(--mute)} .small{font-size:12px}
+.demo{background:#2a2414;color:#ffd99a;border-radius:10px;padding:8px 12px;font-size:13px}
+.tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;background:var(--card);border-radius:12px;padding:4px;max-width:420px}
+.tabs button{height:40px;border:0;border-radius:9px;background:transparent;color:var(--mute);font:600 14px Manrope,sans-serif;cursor:pointer}
+.tabs button[aria-selected=true]{background:var(--sel);color:var(--fg)}
+#view{display:flex;flex-direction:column;gap:12px}
+.card{background:var(--card);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.h{font-weight:700;font-size:15px}
+.duo{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.pc{background:var(--card);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:8px;min-width:0;border:1.5px solid transparent}
+.pc.lead{border-color:var(--c)}
+.pn{display:flex;align-items:center;gap:6px;font-weight:700;font-size:15px;min-width:0}
+.pn span.nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--c);flex-shrink:0}
+.chip{margin-left:auto;font-size:11px;font-weight:700;color:#0F1115;background:var(--c);border-radius:6px;padding:2px 6px;flex-shrink:0}
+.big{font-family:Unbounded,sans-serif;font-weight:700;font-size:40px;letter-spacing:-.03em;line-height:1}
+.bar{height:8px;border-radius:4px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;border-radius:4px;background:var(--c)}
+.kv{display:flex;justify-content:space-between;gap:8px;font-size:13px;border-top:1px solid var(--line);padding-top:7px}
+.kv span{color:var(--mute)}
+.live{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--good);margin-right:5px;vertical-align:1px}
+.gap{text-align:center;font-weight:600;font-size:14px}
+.score{display:flex;align-items:center;justify-content:center;gap:14px}
+.score .big{font-size:44px}
+.score .who{font-size:13px;font-weight:700;display:flex;align-items:center;gap:6px}
+.chart{display:flex;align-items:flex-end;gap:3px;height:150px}
+.col{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0}
+.pair{display:flex;align-items:flex-end;gap:2px;height:120px}
+.pair i{display:block;width:7px;border-radius:2px 2px 0 0}
+.lbl{font-size:10px;color:var(--mute);white-space:nowrap}
+.legend{display:flex;gap:12px;font-size:12px;color:var(--mute);flex-wrap:wrap}
+.legend span{display:flex;align-items:center;gap:5px}
+.legend i{width:8px;height:8px;border-radius:2px;display:inline-block}
+.tbl{display:grid;grid-template-columns:1fr auto auto;gap:8px 14px;font-size:13px;align-items:center}
+.tbl .hd{color:var(--mute);font-size:12px}
+.heat{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px}
+.heat div{aspect-ratio:1;border-radius:4px;background:var(--line);font-size:9px;color:var(--mute);display:flex;align-items:flex-end;justify-content:flex-end;padding:2px}
+.months{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.err{background:#3a1f1f;color:#ffd7cf;border-radius:12px;padding:14px}
+.lang{display:flex;gap:2px;background:var(--card);border-radius:9px;padding:3px}
+.lang button{border:0;background:transparent;color:var(--mute);font:700 12px Manrope,sans-serif;padding:6px 9px;border-radius:7px;cursor:pointer}
+.lang button[aria-pressed=true]{background:var(--sel);color:var(--fg)}
+.right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+@media (min-width:700px){.big{font-size:52px}.pc{padding:18px;gap:10px}.pair i{width:10px}}
+@media (max-width:380px){.big{font-size:34px}}
+@media (max-width:420px){.chip{background:transparent;padding:0;font-size:14px}.chip .tx{display:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top"><div class="logo">Focus Duel</div>
+    <div class="right"><div class="mute small" id="when"></div><div class="lang" role="group" aria-label="Язык / Тіл"><button data-l="ru">RU</button><button data-l="kk">KZ</button></div></div></div>
+  <div id="demo"></div>
+  <div class="tabs" role="tablist">
+    <button role="tab" data-t="today" aria-selected="true"></button>
+    <button role="tab" data-t="week" aria-selected="false"></button>
+    <button role="tab" data-t="month" aria-selected="false"></button>
+  </div>
+  <div id="view"></div>
+</div>
+<script>
+const BOOT={"url": "https://gcbxwggscuutktzetrrt.supabase.co", "key": "sb_publishable_nrOX7qiOldp7TX0PrC2Dfg_JSnQ0voG", "code": null, "me": null};
+const hash=new URLSearchParams(location.hash.slice(1));
+const CODE=(BOOT&&BOOT.code)||hash.get('g'), ME=(BOOT&&BOOT.me)||hash.get('me');
+const DEMO=!(BOOT&&BOOT.url&&BOOT.key&&CODE);
+const LANG0=(BOOT&&BOOT.lang)||((navigator.language||'').startsWith('kk')?'kk':'ru');
+let LANG=(()=>{try{return localStorage.getItem('fd_lang')||LANG0}catch(e){return LANG0}})();
+const T={
+ ru:{loc:'ru-RU',hu:'ч',mu:'мин',tabs:['Сегодня','Неделя','Месяц'],demo:'Демо: выдуманные цифры. После подключения тут будут ваши.',
+  lead:'Лидер',goal:(g,p)=>`цель ${g} ч · ${p}%`,focus:'Фокус',dist:'Отвлечения',sw:'Переключения',
+  notYet:'сегодня ещё не работал',offline:h=>`не на связи ${h} ч`,never:'ещё не присылал данные',atPc:'за компьютером',lastAt:x=>`последняя активность в ${x}`,
+  even:'Пока ровно',ahead:(n,d)=>`${n} впереди на ${d}`,weekSfx:' по часам за неделю',byHour:'По часам',week:'Неделя',won:'выигранные дни',
+  waitT:'Ждём второго участника',waitD:'Как только друг установит Focus Duel и введёт код группы, здесь появится дуэль.',code:'Код группы:',
+  score:'Счёт недели',scoreSub:'дни, кто больше работал',byDay:'По дням',compare:'Сравнение',total:'Всего за неделю',
+  perDay:'В среднем в день',avgFocus:'Средний фокус-блок',best:'Лучший день',monthFor:m=>`за ${m}`,streak:'дней подряд с целью',
+  hit:(a,b)=>`Цель выполнена ${a} раз из ${b}`,wd:['Пн','Вт','Ср','Чт','Пт','Сб','Вс'],err:'Не получилось загрузить дуэль: '},
+ kk:{loc:'kk-KZ',hu:'сағ',mu:'мин',tabs:['Бүгін','Апта','Ай'],demo:'Демо: ойдан алынған сандар. Қосылғаннан кейін мұнда өз сандарыңыз болады.',
+  lead:'Көшбасшы',goal:(g,p)=>`мақсат ${g} сағ · ${p}%`,focus:'Фокус',dist:'Алаңдау',sw:'Ауысулар',
+  notYet:'бүгін әлі жұмыс істемеді',offline:h=>`${h} сағаттан бері байланыста емес`,never:'әлі дерек жібермеді',atPc:'компьютер басында',lastAt:x=>`соңғы белсенділік ${x}`,
+  even:'Әзірге тең',ahead:(n,d)=>`${n} ${d} алда`,weekSfx:' (апта бойынша)',byHour:'Сағат бойынша',week:'Апта',won:'жеңген күндер',
+  waitT:'Екінші қатысушыны күтеміз',waitD:'Досың Focus Duel-ді орнатып, топ кодын енгізген соң мұнда дуэль пайда болады.',code:'Топ коды:',
+  score:'Апта есебі',scoreSub:'кім көбірек жұмыс істеген күндер',byDay:'Күндер бойынша',compare:'Салыстыру',total:'Аптада барлығы',
+  perDay:'Күніне орта есеппен',avgFocus:'Орташа фокус-блок',best:'Ең үздік күн',monthFor:m=>`${m} айында`,streak:'күн қатарынан мақсат орындалды',
+  hit:(a,b)=>`Мақсат орындалды: ${a} / ${b} күн`,wd:['Дс','Сс','Ср','Бс','Жм','Сб','Жс'],err:'Дуэльді жүктеу мүмкін болмады: '}};
+const t=k=>T[LANG][k];
+const RGB=[[76,154,255],[183,148,246]], COL=['var(--p1)','var(--p2)'];
+let DATA=null, TAB='today';
+const $=s=>document.querySelector(s);
+const H=s=>{const m=Math.round(s/60);const h=Math.floor(m/60);return h?`${h} ${t('hu')} ${String(m%60).padStart(2,'0')} ${t('mu')}`:`${m} ${t('mu')}`};
+const HM=s=>{const m=Math.round(s/60);return `${Math.floor(m/60)}:${String(m%60).padStart(2,'0')}`};
+const pct=(a,b)=>b?Math.round(100*a/b):0;
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const ymd=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const dt=s=>new Date(s+'T12:00:00');
+// Браузеры часто не знают казахских дат (выходит «M10»), поэтому месяцы и дни недели — свои
+const KK_M=['қаңтар','ақпан','наурыз','сәуір','мамыр','маусым','шілде','тамыз','қыркүйек','қазан','қараша','желтоқсан'];
+const KK_WD=['жс','дс','сс','ср','бс','жм','сб'];
+const fmtDay=d=>LANG==='kk'?`${KK_WD[d.getDay()]}, ${d.getDate()} ${KK_M[d.getMonth()]}`:d.toLocaleDateString('ru-RU',{weekday:'short',day:'numeric',month:'long'});
+const monthName=d=>LANG==='kk'?KK_M[d.getMonth()]:d.toLocaleDateString('ru-RU',{month:'long'});
+const EMPTY={work_sec:0,distraction_sec:0,rest_sec:0,active_sec:0,longest_focus_sec:0,switches:0,hourly_work:Array(24).fill(0),first_active:null,last_active:null,updated_at:null};
+
+function demoData(){
+  let seed=11;const rnd=()=>(seed=seed*16807%2147483647)/2147483647;
+  const now=new Date(), members=[{id:'a',name:'Даниял',goal_hours:5},{id:'b',name:'Нурхан',goal_hours:6}], stats=[];
+  for(let i=34;i>=0;i--){const d=new Date(now);d.setDate(d.getDate()-i);const date=ymd(d),dow=d.getDay();
+    members.forEach((m,k)=>{
+      const off=dow===0||(dow===6&&k===1);
+      let left=off?rnd()*1.5*3600:(3.4+rnd()*3)*3600*(k?.92:1);
+      const hourly=Array(24).fill(0);const start=k?10:9;
+      for(let h=start;h<start+11&&left>0;h++){if(i===0&&h>=now.getHours())break;const v=Math.min(left,(.35+rnd()*.55)*3600);hourly[h]=v;left-=v}
+      const work=hourly.reduce((a,b)=>a+b,0);const last=hourly.reduce((a,v,h)=>v?h:a,-1);
+      stats.push({member_id:m.id,date,work_sec:work,distraction_sec:work*(.03+rnd()*.16),rest_sec:rnd()*5400,active_sec:work*1.2,
+        longest_focus_sec:Math.min(work,(.3+rnd()*1.1)*3600),switches:Math.round(work/3600*(70+rnd()*120)),hourly_work:hourly,
+        first_active:work?`${String(start).padStart(2,'0')}:${String(Math.floor(rnd()*50)).padStart(2,'0')}`:null,
+        last_active:work?(i===0&&k===0?`${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`:`${String(last+1).padStart(2,'0')}:${String(Math.floor(rnd()*50)).padStart(2,'0')}`):null,
+        updated_at:new Date(now-(k?40:3)*60000).toISOString()})})}
+  return {group:{name:'Даниял × Нурхан'},members,stats};
+}
+async function fetchData(){
+  const from=new Date();from.setDate(from.getDate()-34);
+  const r=await fetch(BOOT.url.replace(/\/$/,'')+'/rest/v1/rpc/get_group_stats',{method:'POST',
+    headers:Object.assign({'Content-Type':'application/json',apikey:BOOT.key},BOOT.key.startsWith('eyJ')?{Authorization:'Bearer '+BOOT.key}:{}),
+    body:JSON.stringify({p_code:CODE,p_from:ymd(from),p_to:ymd(new Date())})});
+  const j=await r.json();if(!r.ok)throw new Error(j.message||('HTTP '+r.status));return j;
+}
+function prepare(raw){
+  let members=raw.members.slice();
+  if(ME){const i=members.findIndex(m=>m.id===ME);if(i>0)members.unshift(members.splice(i,1)[0])}
+  members=members.slice(0,2);
+  const by={},seenAt={};raw.stats.forEach(s=>{(by[s.member_id]=by[s.member_id]||{})[s.date]=s;
+    const u=Date.parse(s.updated_at);if(u&&!(seenAt[s.member_id]>u))seenAt[s.member_id]=u});
+  const days=[];for(let i=34;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);days.push(ymd(d))}
+  return {group:raw.group,members,days,today:days[days.length-1],get:(m,d)=>((by[m.id]||{})[d])||EMPTY,seenAt:m=>seenAt[m.id]||0};
+}
+function seen(m){
+  const at=DATA.seenAt(m),gap=(Date.now()-at)/3600000;
+  if(!at)return t('never');
+  if(gap>2)return `<span style="color:var(--bad)">${t('offline')(Math.floor(gap))}</span>`;
+  const s=DATA.get(m,DATA.today);if(!s.last_active)return t('notYet');
+  const [h,mi]=s.last_active.split(':').map(Number),now=new Date(),ago=now.getHours()*60+now.getMinutes()-(h*60+mi);
+  return ago<=15?`<span class="live"></span>${t('atPc')}`:t('lastAt')(s.last_active);
+}
+function personCard(m,k,s,lead){
+  const goal=m.goal_hours*3600, dist=pct(s.distraction_sec,s.work_sec+s.distraction_sec);
+  return `<div class="pc ${lead?'lead':''}" style="--c:${COL[k]}">
+    <div class="pn"><i class="dot"></i><span class="nm">${esc(m.name)}</span>${lead?`<span class="chip">👑<span class="tx"> ${t('lead')}</span></span>`:''}</div>
+    <div class="big">${HM(s.work_sec)}</div>
+    <div class="bar"><i style="width:${Math.min(100,100*s.work_sec/goal)}%"></i></div>
+    <div class="mute small">${t('goal')(m.goal_hours,pct(s.work_sec,goal))}</div>
+    <div class="kv"><span>${t('focus')}</span><b>${HM(s.longest_focus_sec)}</b></div>
+    <div class="kv"><span>${t('dist')}</span><b style="color:${dist>20?'var(--bad)':'inherit'}">${dist}%</b></div>
+    <div class="kv"><span>${t('sw')}</span><b>${s.switches}</b></div>
+    <div class="mute small">${seen(m)}</div>
+  </div>`;
+}
+function gapLine(a,b,va,vb,suffix){
+  const d=Math.abs(va-vb);if(d<60)return `<div class="gap mute">${t('even')}${suffix||''}</div>`;
+  const w=va>vb?a:b, k=va>vb?0:1;
+  return `<div class="gap">${t('ahead')(`<span style="color:${COL[k]}">${esc(w.name)}</span>`,H(d))}${suffix||''}</div>`;
+}
+function pairChart(labels,va,vb,max,sub){
+  const h=v=>Math.max(v?3:0,Math.round(v/max*120));
+  return `<div class="chart">${labels.map((l,i)=>`<div class="col"><div class="pair"><i style="background:var(--p1);height:${h(va[i])}px"></i><i style="background:var(--p2);height:${h(vb[i])}px"></i></div><div class="lbl">${l}</div>${sub?`<div class="lbl">${sub[i]}</div>`:''}</div>`).join('')}</div>`;
+}
+function legend(){const [a,b]=DATA.members;return `<div class="legend"><span><i style="background:var(--p1)"></i>${esc(a.name)}</span>${b?`<span><i style="background:var(--p2)"></i>${esc(b.name)}</span>`:''}</div>`}
+function weekDays(){const td=dt(DATA.today),dow=(td.getDay()+6)%7;return DATA.days.slice(-(dow+1))}
+function wins(days){const [a,b]=DATA.members;let wa=0,wb=0;days.forEach(d=>{const x=DATA.get(a,d).work_sec,y=DATA.get(b,d).work_sec;if(Math.abs(x-y)<60)return;if(x>y)wa++;else wb++});return [wa,wb]}
+function waiting(){return `<div class="card"><div class="h">${t('waitT')}</div><div class="mute" style="font-size:14px">${t('waitD')}</div>${CODE?`<div style="font-size:14px">${t('code')} <b style="font-family:Unbounded,sans-serif;letter-spacing:.04em">${esc(CODE)}</b></div>`:''}</div>`}
+
+function today(){
+  const [a,b]=DATA.members;if(!b)return waiting();
+  const td=DATA.today,sa=DATA.get(a,td),sb=DATA.get(b,td),lead=Math.abs(sa.work_sec-sb.work_sec)>=60?(sa.work_sec>sb.work_sec?0:1):-1;
+  let lo=24,hi=0;[sa,sb].forEach(s=>s.hourly_work.forEach((v,h)=>{if(v>60){lo=Math.min(lo,h);hi=Math.max(hi,h)}}));if(lo>hi){lo=9;hi=19}
+  const hours=[];for(let h=lo;h<=hi;h++)hours.push(h);
+  const [wa,wb]=wins(weekDays());
+  return `<div class="duo">${personCard(a,0,sa,lead===0)}${personCard(b,1,sb,lead===1)}</div>
+  ${gapLine(a,b,sa.work_sec,sb.work_sec)}
+  <div class="card"><div class="top"><div class="h">${t('byHour')}</div>${legend()}</div>${pairChart(hours,hours.map(h=>sa.hourly_work[h]),hours.map(h=>sb.hourly_work[h]),3600)}</div>
+  <div class="card"><div class="top"><div class="h">${t('week')}</div><div class="mute small">${t('won')}</div></div>
+    <div class="score"><div class="who" style="color:var(--p1)">${esc(a.name)}</div><div class="big">${wa} : ${wb}</div><div class="who" style="color:var(--p2)">${esc(b.name)}</div></div></div>`;
+}
+function week(){
+  const [a,b]=DATA.members;if(!b)return waiting();
+  const cur=weekDays(),names=t('wd'),all=names.map((_,i)=>cur[i]||null);
+  const va=all.map(d=>d?DATA.get(a,d).work_sec:0),vb=all.map(d=>d?DATA.get(b,d).work_sec:0);
+  const sum=v=>v.reduce((x,y)=>x+y,0),[wa,wb]=wins(cur),max=Math.max(3600,...va,...vb);
+  const avg=(m,f)=>{const ds=cur.filter(d=>DATA.get(m,d).work_sec>0);return ds.length?ds.reduce((x,d)=>x+f(DATA.get(m,d)),0)/ds.length:0};
+  const best=m=>{let bd=null;cur.forEach(d=>{if(!bd||DATA.get(m,d).work_sec>DATA.get(m,bd).work_sec)bd=d});return bd&&DATA.get(m,bd).work_sec?names[(dt(bd).getDay()+6)%7]+' · '+HM(DATA.get(m,bd).work_sec):'—'};
+  const distPct=(m,v)=>{const ds=cur.reduce((x,d)=>x+DATA.get(m,d).distraction_sec,0);return pct(ds,sum(v)+ds)+'%'};
+  const row=(label,fa,fb)=>`<div>${label}</div><b style="color:var(--p1)">${fa}</b><b style="color:var(--p2)">${fb}</b>`;
+  return `<div class="card"><div class="top"><div class="h">${t('score')}</div><div class="mute small">${t('scoreSub')}</div></div>
+    <div class="score"><div class="who" style="color:var(--p1)">${esc(a.name)}</div><div class="big">${wa} : ${wb}</div><div class="who" style="color:var(--p2)">${esc(b.name)}</div></div>
+    ${gapLine(a,b,sum(va),sum(vb),t('weekSfx'))}</div>
+  <div class="card"><div class="top"><div class="h">${t('byDay')}</div>${legend()}</div>${pairChart(names,va,vb,max,all.map((d,i)=>d?HM(Math.max(va[i],vb[i])):''))}</div>
+  <div class="card"><div class="h">${t('compare')}</div><div class="tbl">
+    <div class="hd"></div><div class="hd">${esc(a.name)}</div><div class="hd">${esc(b.name)}</div>
+    ${row(t('total'),HM(sum(va)),HM(sum(vb)))}
+    ${row(t('perDay'),HM(avg(a,s=>s.work_sec)),HM(avg(b,s=>s.work_sec)))}
+    ${row(t('avgFocus'),HM(avg(a,s=>s.longest_focus_sec)),HM(avg(b,s=>s.longest_focus_sec)))}
+    ${row(t('dist'),distPct(a,va),distPct(b,vb))}
+    ${row(t('best'),best(a),best(b))}
+  </div></div>`;
+}
+function month(){
+  const td=dt(DATA.today),first=new Date(td.getFullYear(),td.getMonth(),1),pad=(first.getDay()+6)%7,dim=new Date(td.getFullYear(),td.getMonth()+1,0).getDate();
+  const one=(m,k)=>{
+    const goal=m.goal_hours*3600,inMonth=DATA.days.filter(d=>dt(d).getMonth()===td.getMonth());
+    const total=inMonth.reduce((x,d)=>x+DATA.get(m,d).work_sec,0),hit=inMonth.filter(d=>DATA.get(m,d).work_sec>=goal).length;
+    let streak=0;for(let i=DATA.days.length-1;i>=0;i--){if(DATA.get(m,DATA.days[i]).work_sec>=goal)streak++;else if(i===DATA.days.length-1)continue;else break}
+    const cells=[];for(let i=0;i<pad;i++)cells.push('<div style="background:transparent"></div>');
+    for(let d=1;d<=dim;d++){const key=ymd(new Date(td.getFullYear(),td.getMonth(),d)),w=DATA.get(m,key).work_sec,op=w?Math.min(1,.18+.82*w/goal):0;
+      cells.push(`<div title="${key}: ${H(w)}" style="${op?`background:rgba(${RGB[k]},${op.toFixed(2)});color:#0F1115`:''}">${d}</div>`)}
+    return `<div class="card" style="--c:${COL[k]}"><div class="pn"><i class="dot"></i><span class="nm">${esc(m.name)}</span></div>
+      <div class="duo"><div><div class="big" style="font-size:30px">${Math.round(total/3600)} ${t('hu')}</div><div class="mute small">${t('monthFor')(monthName(first))}</div></div>
+      <div><div class="big" style="font-size:30px">${streak}</div><div class="mute small">${t('streak')}</div></div></div>
+      <div class="mute small">${t('hit')(hit,inMonth.length)}</div>
+      <div class="heat">${t('wd').map(n=>`<div style="background:transparent;aspect-ratio:auto;justify-content:center">${n}</div>`).join('')}${cells.join('')}</div></div>`;
+  };
+  return `<div class="months">${DATA.members.map(one).join('')}</div>`;
+}
+function chrome(){
+  document.documentElement.lang=LANG==='kk'?'kk':'ru';
+  document.querySelectorAll('.tabs button').forEach((b,i)=>b.textContent=t('tabs')[i]);
+  document.querySelectorAll('.lang button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.l===LANG));
+  $('#demo').innerHTML=DEMO?`<div class="demo">${t('demo')}</div>`:'';
+}
+function render(){
+  chrome();
+  if(!DATA)return;
+  const n=new Date();$('#when').textContent=fmtDay(dt(DATA.today))+' · '+String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');
+  $('#view').innerHTML={today,week,month}[TAB]();
+}
+async function load(){
+  try{DATA=prepare(DEMO?demoData():await fetchData());render()}
+  catch(e){$('#view').innerHTML=`<div class="err">${t('err')}${esc(e.message)}</div>`}
+}
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{TAB=b.dataset.t;document.querySelectorAll('.tabs button').forEach(x=>x.setAttribute('aria-selected',x===b));render()});
+document.querySelectorAll('.lang button').forEach(b=>b.onclick=()=>{LANG=b.dataset.l;try{localStorage.setItem('fd_lang',LANG)}catch(e){}render()});
+render();load();setInterval(load,5*60*1000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)load()});
+</script>
+</body>
+</html>
